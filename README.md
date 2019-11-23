@@ -20,40 +20,49 @@ converts it to the corresponding style.
 
 ```racket
 (->PascalCase string-like) -> (or/c symbol? string? bytes)
-  string-like : (or/c symbol? string? bytes?)             
+  string-like : (or/c symbol? string? bytes?)
 ```
 
 ```racket
 (->Camel_Snake_Case string-like) -> (or/c symbol? string? bytes)
-  string-like : (or/c symbol? string? bytes?)                   
+  string-like : (or/c symbol? string? bytes?)
 ```
 
 ```racket
 (->camelCase string-like) -> (or/c symbol? string? bytes)
-  string-like : (or/c symbol? string? bytes?)            
+  string-like : (or/c symbol? string? bytes?)
 ```
 
 ```racket
-(->SCREAMING_SNAKE_CASE string-like)         
- -> (or/c symbol? string? bytes)             
+(->SCREAMING_SNAKE_CASE string-like)
+ -> (or/c symbol? string? bytes)
   string-like : (or/c symbol? string? bytes?)
 ```
 
 ```racket
 (->snake_case string-like) -> (or/c symbol? string? bytes)
-  string-like : (or/c symbol? string? bytes?)             
+  string-like : (or/c symbol? string? bytes?)
 ```
 
 ```racket
 (->kebab-case string-like) -> (or/c symbol? string? bytes)
-  string-like : (or/c symbol? string? bytes?)             
+  string-like : (or/c symbol? string? bytes?)
 ```
 
 ```racket
-(->SCREAMING-KEBAB-CASE string-like)         
- -> (or/c symbol? string? bytes)             
+(->SCREAMING-KEBAB-CASE string-like)
+ -> (or/c symbol? string? bytes)
   string-like : (or/c symbol? string? bytes?)
 ```
+
+```racket
+(->HTTP-Case string-like) -> (or/c symbol? string? bytes)
+  string-like : (or/c symbol? string? bytes?)
+```
+
+This is an odd one: it performs a lookup on special words that require a
+canonical casing, use them if they match, otherwise will fall back on
+`string-titlecase`.
 
 ## 3. Copyright & License
 

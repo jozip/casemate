@@ -38,6 +38,13 @@ and converts it to the corresponding style.
 @defproc[(->SCREAMING-KEBAB-CASE [string-like (or/c symbol? string? bytes?)])
          (or/c symbol? string? bytes)]
 
+@defproc[(->HTTP-Case [string-like (or/c symbol? string? bytes?)])
+         (or/c symbol? string? bytes)]
+
+This is an odd one: it performs a lookup on special words that require a
+canonical casing, use them if they match, otherwise will fall back on
+@code["string-titlecase"].
+
 @section{Copyright & License}
 
 Copyright © 2019 Johan Persson.

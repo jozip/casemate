@@ -34,6 +34,35 @@
 (require srfi/26) ;; For the handy cut-function
 
 
+;;;; Constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; List of special words in HTTP headers.
+;;; Made into an association list for quick lookup.
+(define http-header-special-words
+  (map (lambda (component)
+         (cons (string-downcase component) component))
+       '("MD5"
+         "HTTP2"
+         "TE"
+         "DNT"
+         "ATT"
+         "UIDH"
+         "XSRF"
+         "CSRFToken"
+         "ETag"
+         "P3P"
+         "WWW"
+         "CSP"
+         "ID"
+         "UA"
+         "XSS"
+         "SSL"
+         "HTTP"
+         "HTTPS"
+         "IM"
+         "WAP")))
+
+
 ;;;; Utility functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Splits a string on lower-case/upper-case character-pairs without
@@ -76,6 +105,13 @@
                      (map cdr-case (cdr components)))
                separator))
 
+;;; HTTP header case converter.
+(define (http-case str)
+  (let ([special (assoc (string-downcase str) http-header-special-words)])
+    (if (eq? special #f)
+      (string-titlecase str)
+      (cdr special))))
+
 ;;; Converts symbols and byte-strings to strings and back.
 ;;; Throws an exception if the given data is nonsense.
 (define (->string-> thing-applier thing)
@@ -99,6 +135,7 @@
 (define ->snake_case           (make-converter string-downcase  string-downcase  "_"))
 (define ->kebab-case           (make-converter string-downcase  string-downcase  "-"))
 (define ->SCREAMING-KEBAB-CASE (make-converter string-upcase    string-upcase    "-"))
+(define ->HTTP-Case            (make-converter http-case        http-case        "-"))
 
 
 ;;;; Exports ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -112,7 +149,8 @@
            [->SCREAMING_SNAKE_CASE converter/c]
            [->snake_case           converter/c]
            [->kebab-case           converter/c]
-           [->SCREAMING-KEBAB-CASE converter/c]))
+           [->SCREAMING-KEBAB-CASE converter/c]
+           [->HTTP-Case            converter/c]))
 
 
 ;;;; Tests ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -172,58 +210,73 @@
                "should fail when given nonsense data"))
 
   (test-case
+    "Procedure: http-case"
+    (check-equal? (http-case "Http")
+                  "HTTP"
+                  "should return upper-cased string for a special word")
+    (check-equal? (http-case "foo")
+                  "Foo"
+                  "should return title-cased string for an ordinary word"))
+
+  (test-case
     "Check that each converter returns the expected result for a given string"
-    (define test-string "fooBar-thud_grunt beep")
+    (define test-string "fooBar-thud_grunt beepHTTP")
     (check-equal? (->PascalCase test-string)
-                  "FooBarThudGruntBeep")
+                  "FooBarThudGruntBeepHttp")
     (check-equal? (->Camel_Snake_Case test-string)
-                  "Foo_Bar_Thud_Grunt_Beep")
+                  "Foo_Bar_Thud_Grunt_Beep_Http")
     (check-equal? (->camelCase test-string)
-                  "fooBarThudGruntBeep")
+                  "fooBarThudGruntBeepHttp")
     (check-equal? (->SCREAMING_SNAKE_CASE test-string)
-                  "FOO_BAR_THUD_GRUNT_BEEP")
+                  "FOO_BAR_THUD_GRUNT_BEEP_HTTP")
     (check-equal? (->snake_case test-string)
-                  "foo_bar_thud_grunt_beep")
+                  "foo_bar_thud_grunt_beep_http")
     (check-equal? (->kebab-case test-string)
-                  "foo-bar-thud-grunt-beep")
+                  "foo-bar-thud-grunt-beep-http")
     (check-equal? (->SCREAMING-KEBAB-CASE test-string)
-                  "FOO-BAR-THUD-GRUNT-BEEP"))
+                  "FOO-BAR-THUD-GRUNT-BEEP-HTTP")
+    (check-equal? (->HTTP-Case test-string)
+                  "Foo-Bar-Thud-Grunt-Beep-HTTP"))
 
   (test-case
     "Check that each converter returns the expected result for a given symbol"
-    (define test-symbol '|fooBar-thud_grunt beep|)
+    (define test-symbol '|fooBar-thud_grunt beepHTTP|)
     (check-equal? (->PascalCase test-symbol)
-                  'FooBarThudGruntBeep)
+                  'FooBarThudGruntBeepHttp)
     (check-equal? (->Camel_Snake_Case test-symbol)
-                  'Foo_Bar_Thud_Grunt_Beep)
+                  'Foo_Bar_Thud_Grunt_Beep_Http)
     (check-equal? (->camelCase test-symbol)
-                  'fooBarThudGruntBeep)
+                  'fooBarThudGruntBeepHttp)
     (check-equal? (->SCREAMING_SNAKE_CASE test-symbol)
-                  'FOO_BAR_THUD_GRUNT_BEEP)
+                  'FOO_BAR_THUD_GRUNT_BEEP_HTTP)
     (check-equal? (->snake_case test-symbol)
-                  'foo_bar_thud_grunt_beep)
+                  'foo_bar_thud_grunt_beep_http)
     (check-equal? (->kebab-case test-symbol)
-                  'foo-bar-thud-grunt-beep)
+                  'foo-bar-thud-grunt-beep-http)
     (check-equal? (->SCREAMING-KEBAB-CASE test-symbol)
-                  'FOO-BAR-THUD-GRUNT-BEEP))
+                  'FOO-BAR-THUD-GRUNT-BEEP-HTTP)
+    (check-equal? (->HTTP-Case test-symbol)
+                  'Foo-Bar-Thud-Grunt-Beep-HTTP))
 
   (test-case
     "Check that each converter returns the expected result for a given byte string"
-    (define test-byte-string #"fooBar-thud_grunt beep")
+    (define test-byte-string #"fooBar-thud_grunt beepHTTP")
     (check-equal? (->PascalCase test-byte-string)
-                  #"FooBarThudGruntBeep")
+                  #"FooBarThudGruntBeepHttp")
     (check-equal? (->Camel_Snake_Case test-byte-string)
-                  #"Foo_Bar_Thud_Grunt_Beep")
+                  #"Foo_Bar_Thud_Grunt_Beep_Http")
     (check-equal? (->camelCase test-byte-string)
-                  #"fooBarThudGruntBeep")
+                  #"fooBarThudGruntBeepHttp")
     (check-equal? (->SCREAMING_SNAKE_CASE test-byte-string)
-                  #"FOO_BAR_THUD_GRUNT_BEEP")
+                  #"FOO_BAR_THUD_GRUNT_BEEP_HTTP")
     (check-equal? (->snake_case test-byte-string)
-                  #"foo_bar_thud_grunt_beep")
+                  #"foo_bar_thud_grunt_beep_http")
     (check-equal? (->kebab-case test-byte-string)
-                  #"foo-bar-thud-grunt-beep")
+                  #"foo-bar-thud-grunt-beep-http")
     (check-equal? (->SCREAMING-KEBAB-CASE test-byte-string)
-                  #"FOO-BAR-THUD-GRUNT-BEEP")))
+                  #"FOO-BAR-THUD-GRUNT-BEEP-HTTP")
+    (check-equal? (->HTTP-Case test-byte-string)
+                  #"Foo-Bar-Thud-Grunt-Beep-HTTP")))
 
 ;;                                  ❦ ❦ ❦                                   ;;
 ;;                                   ❦ ❦                                    ;;
